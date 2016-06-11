@@ -41,10 +41,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="brand" href="#">App Engine Guestbook</a>
-          <div class="nav-collapse collapse pull-right">
-            <a href="{{ url|safe }}" class="btn">{{ url_linktext }}</a>
-          </div>
+          <a class="brand" href="#">Weather Data Storage Viewer</a>
         </div>
       </div>
     </div>
@@ -52,33 +49,21 @@
       <!-- [START greetings] -->
       {% for greeting in greetings %}
       <div class="row">
-        {% if greeting.author %}
-          <b>{{ greeting.author.email }}
-            {% if user and user.user_id() == greeting.author.identity %}
-              (You)
-            {% endif %}
-          </b> wrote:
+        {% if greeting.date %}
+          <b>{{ greeting.date }}:
+          </b>
         {% else %}
-          An anonymous person wrote:
+          No Timestamp???:
         {% endif %}
         <blockquote>{{ greeting.content }}</blockquote>
       </div>
       {% endfor %}
       <!-- [END greetings] -->
 
-      <form action="/sign?guestbook_name={{ guestbook_name }}" method="post">
-        <div><textarea name="content" class="input-block-level" rows="3"></textarea></div>
-        <div><input type="submit" class="btn btn-large btn-primary" value="Sign Guestbook"></div>
-      </form>
 
       <hr>
 
-      <form>Guestbook name:
-        <input value="{{ guestbook_name }}" name="guestbook_name">
-        <input type="submit" value="switch">
-      </form>
 
-      <a href="{{ url|safe }}">{{ url_linktext }}</a>
     </div>
   </body>
 </html>

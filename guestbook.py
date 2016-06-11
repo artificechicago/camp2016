@@ -21,6 +21,8 @@ import urllib
 from google.appengine.api import users
 from google.appengine.ext import ndb
 
+import json, datetime
+
 import jinja2
 import webapp2
 
@@ -71,20 +73,11 @@ class MainPage(webapp2.RequestHandler):
             ancestor=guestbook_key(guestbook_name)).order(-Greeting.date)
         greetings = greetings_query.fetch(10)
 
-        user = users.get_current_user()
-        if user:
-            url = users.create_logout_url(self.request.uri)
-            url_linktext = 'Logout'
-        else:
-            url = users.create_login_url(self.request.uri)
-            url_linktext = 'Login'
+
 
         template_values = {
-            'user': user,
             'greetings': greetings,
-            'guestbook_name': urllib.quote_plus(guestbook_name),
-            'url': url,
-            'url_linktext': url_linktext,
+            'guestbook_name': urllib.quote_plus(guestbook_name)
         }
 
         template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -95,7 +88,7 @@ class MainPage(webapp2.RequestHandler):
 # [START guestbook]
 class Guestbook(webapp2.RequestHandler):
 
-    def post(self):
+    def get(self):
         # We set the same parent key on the 'Greeting' to ensure each
         # Greeting is in the same entity group. Queries across the
         # single entity group will be consistent. However, the write
@@ -105,11 +98,6 @@ class Guestbook(webapp2.RequestHandler):
                                           DEFAULT_GUESTBOOK_NAME)
         greeting = Greeting(parent=guestbook_key(guestbook_name))
 
-        if users.get_current_user():
-            greeting.author = Author(
-                    identity=users.get_current_user().user_id(),
-                    email=users.get_current_user().email())
-
         greeting.content = self.request.get('content')
         greeting.put()
 
@@ -117,10 +105,60 @@ class Guestbook(webapp2.RequestHandler):
         self.redirect('/?' + urllib.urlencode(query_params))
 # [END guestbook]
 
+# [START guestbook]
+class PullData(webapp2.RequestHandler):
+
+    def get(self):
+        # We set the same parent key on the 'Greeting' to ensure each
+        # Greeting is in the same entity group. Queries across the
+        # single entity group will be consistent. However, the write
+        # rate to a single entity group should be limited to
+        # ~1/second.
+        guestbook_name = self.request.get('guestbook_name',
+                                          DEFAULT_GUESTBOOK_NAME)
+        ind = self.request.get('ind',
+                                          0)
+        lt = self.request.get('last_time',
+                                          datetime.datetime(2000, 1, 1, 0, 00, 00, 100).isoformat())
+        lasttime = datetime.datetime.strptime(lt, "%Y-%m-%dT%H:%M:%S.%f")
+        greetings_query = Greeting.query(
+            ancestor=guestbook_key(guestbook_name)).filter(Greeting.date>lasttime).order(Greeting.date)
+        greetings = greetings_query.fetch(100)
+        res=[]
+        mxd = lasttime
+        for greeting in greetings:
+            con = greeting.content
+            pie = con.split(',')
+            if(len(pie)>ind):
+                v = pie[ind]
+            else:
+                v = pie[0]
+            try:
+                res.append(float(v))
+            except ValueError:
+                print "Not a float"
+            if greeting.date>mxd:
+                mxd=greeting.date
+        self.response.headers['Content-Type'] = 'application/json'
+
+        obj = {
+            'd': res,
+            't': mxd
+            }
+        date_handler = lambda obj: (
+            obj.isoformat()
+            if isinstance(obj, datetime.datetime)
+            or isinstance(obj, datetime.date)
+            else None
+        )
+        self.response.out.write(json.dumps(obj, default=date_handler))
+# [END guestbook]
+
 
 # [START app]
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/sign', Guestbook),
+    ('/data', PullData),
 ], debug=True)
 # [END app]

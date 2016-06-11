@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <script src="canvasjs.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    <script type="text/javascript">
+	window.onload = function () {
+
+		var dps = []; // dataPoints
+
+		var chart = new CanvasJS.Chart("chartContainer",{
+			title :{
+				text: "Temperature Data"
+			},
+			data: [{
+				type: "line",
+				dataPoints: dps
+			}]
+		});
+
+    xVal = 0;
+		yVal = 100;
+		var updateInterval = 1000;
+		var dataLength = 100; // number of dataPoints visible at any point
+
+
+        var lastByte = 0;
+		var updateChart = function (data,last_time) {
+//			var read = new XMLHttpRequest();
+//            read.onreadystatechange = function() {
+//
+//                console.log(read)
+//                if (read.readyState == 4 && read.status == 200)
+//                yVal = parseInt(read.responseText)
+//             }
+//            read.open("GET", "http://www.google.com",true);
+//            read.send(null);
+			// count is number of times loop runs to generate random dataPoints.
+      count = data.length
+			for (var j = 0; j < count; j++) {
+                //var data = parseInt(read.responseText)
+                //lastByte = parseInt(read.getResponseHeader("Content-length"))
+                //read.setRequestHeader("Range", "bytes=" + parseInt(lastByte) + "-")
+                //yVal =  Math.round(5 + Math.random() *(-5-5));
+                yVal=data[j]
+				dps.push({
+					x: xVal,
+					y: yVal
+				});
+				xVal++;
+			};
+			while (dps.length > dataLength)
+			{
+				dps.shift();
+			}
+
+			chart.render();
+
+      setTimeout(function(){
+        $.ajax({
+             url:"/data?guestbook_name=datastore&last_time="+last_time,
+             type:'GET',
+             success: function(data){
+                 updateChart(data['d'],data['t'])
+             }
+          });
+        }, updateInterval)
+		};
+
+		// generates first set of dataPoints
+    $.ajax({
+         url:"/data?guestbook_name=datastore",
+         type:'GET',
+         success: function(data){
+             updateChart(data['d'],data['t'])
+         }
+      });
+
+
+	}
+	</script>
+	<script type="text/javascript" src="/assets/script/canvasjs.min.js"></script>
+</head>
+<body>
+	<div id="chartContainer" style="height: 300px; width:100%;">
+	</div>
+</body>
+</html>
