@@ -116,8 +116,8 @@ class PullData(webapp2.RequestHandler):
         # ~1/second.
         guestbook_name = self.request.get('guestbook_name',
                                           DEFAULT_GUESTBOOK_NAME)
-        ind = self.request.get('ind',
-                                          0)
+        ind = int(self.request.get('ind',
+                                          0))
         lt = self.request.get('last_time',
                                           datetime.datetime(2000, 1, 1, 0, 00, 00, 100).isoformat())
         lasttime = datetime.datetime.strptime(lt, "%Y-%m-%dT%H:%M:%S.%f")
