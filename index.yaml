@@ -3,3 +3,9 @@ indexes:
   ancestor: yes
   properties:
   - name: date
+  
+- kind: Greeting
+  ancestor: yes
+  properties:
+  - name: date
+    direction: desc
