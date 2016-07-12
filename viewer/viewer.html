@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <script src="canvasjs.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    <script type="text/javascript">
+	window.onload = function () {
+
+    var dps0 = []; // dataPoints
+    var dps1 = []; // dataPoints
+    var dps2 = []; // dataPoints
+    var dps3 = []; // dataPoints
+
+format={
+  title: "Time",
+  gridThickness: 2,
+  interval:10,
+  intervalType: "minute",
+  valueFormatString: "hh:mm TT",
+  labelAngle: -20
+};
+		var chart0 = new CanvasJS.Chart("chartContainer0",{
+			title :{
+				text: "Temperature Data"
+			},
+      axisX:format,
+			data: [{
+				type: "line",
+				dataPoints: dps0
+			}]
+		});
+
+    var chart1 = new CanvasJS.Chart("chartContainer1",{
+			title :{
+				text: "Pressure Data"
+			},
+      axisX:format,
+			data: [{
+				type: "line",
+				dataPoints: dps1
+			}]
+		});
+
+    var chart2 = new CanvasJS.Chart("chartContainer2",{
+      title :{
+        text: "Humidity Data"
+      },
+      axisX:format,
+			data: [{
+        type: "line",
+        dataPoints: dps2
+      }]
+    });
+
+    var chart3 = new CanvasJS.Chart("chartContainer3",{
+      title :{
+        text: "Light Level Data"
+      },
+      axisX:format,
+			data: [{
+        type: "line",
+        dataPoints: dps3
+      }]
+    });
+
+
+    xVal = 0;
+		yVal = 100;
+		var updateInterval = 1000;
+		var dataLength = 100; // number of dataPoints visible at any point
+
+
+        var lastByte = 0;
+		var updateChart = function (data,time,lt,dps,chart,ind) {
+      count = data.length
+			for (var j = 0; j < count; j++) {
+                xVal=new Date(time[j]);
+                yVal=data[j]
+				        dps.push({
+					         x: xVal,
+					         y: yVal
+				        });
+
+			};
+			while (dps.length > dataLength)
+			{
+				dps.shift();
+			}
+
+			chart.render();
+      last_time=lt
+      setTimeout(function(){
+        $.ajax({
+             url:"/data?guestbook_name=datastore&ind="+ind+"&last_time="+last_time,
+             type:'GET',
+             success: function(data){
+                 updateChart(data['d'],data['t'],data['lt'],dps,chart,ind)
+             }
+          });
+        }, updateInterval)
+		};
+
+lt ="2016-07-04T12:00:00.000000"
+		// generates first set of dataPoints
+    $.ajax({
+         url:"/data?guestbook_name=datastore&ind=0&last_time="+lt,
+         type:'GET',
+         success: function(data){
+             updateChart(data['d'],data['t'],data['lt'],dps0,chart0,0)
+         }
+      });
+
+    $.ajax({
+         url:"/data?guestbook_name=datastore&ind=1&last_time="+lt,
+         type:'GET',
+         success: function(data){
+             updateChart(data['d'],data['t'],data['lt'],dps1,chart1,1)
+         }
+      });
+
+    $.ajax({
+         url:"/data?guestbook_name=datastore&ind=2&last_time="+lt,
+         type:'GET',
+         success: function(data){
+             updateChart(data['d'],data['t'],data['lt'],dps2,chart2,2)
+         }
+      });
+
+    $.ajax({
+         url:"/data?guestbook_name=datastore&ind=3&last_time="+lt,
+         type:'GET',
+         success: function(data){
+             updateChart(data['d'],data['t'],data['lt'],dps3,chart3,3)
+         }
+      });
+
+
+
+	}
+	</script>
+</head>
+<body>
+  <div id="chartContainer0" style="height: 300px; width:100%;">
+	</div>
+  <div id="chartContainer1" style="height: 300px; width:100%;">
+	</div>
+  <div id="chartContainer2" style="height: 300px; width:100%;">
+	</div>
+  <div id="chartContainer3" style="height: 300px; width:100%;">
+	</div>
+</body>
+</html>

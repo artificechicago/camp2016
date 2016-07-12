@@ -21,7 +21,10 @@ import urllib
 from google.appengine.api import users
 from google.appengine.ext import ndb
 
-import json, datetime
+from google.appengine.ext import ndb
+from google.appengine.api import taskqueue
+
+import json, datetime, time
 
 import jinja2
 import webapp2
@@ -125,8 +128,10 @@ class PullData(webapp2.RequestHandler):
             ancestor=guestbook_key(guestbook_name)).filter(Greeting.date>lasttime).order(Greeting.date)
         greetings = greetings_query.fetch(100)
         res=[]
+        tres=[]
         mxd = lasttime
         for greeting in greetings:
+            tim = int(time.mktime(greeting.date.timetuple())) * 1000
             con = greeting.content
             pie = con.split(',')
             if(len(pie)>ind):
@@ -135,6 +140,7 @@ class PullData(webapp2.RequestHandler):
                 v = pie[0]
             try:
                 res.append(float(v))
+                tres.append(tim)
             except ValueError:
                 print "Not a float"
             if greeting.date>mxd:
@@ -143,7 +149,8 @@ class PullData(webapp2.RequestHandler):
 
         obj = {
             'd': res,
-            't': mxd
+            't': tres,
+            'lt':mxd
             }
         date_handler = lambda obj: (
             obj.isoformat()
@@ -154,11 +161,37 @@ class PullData(webapp2.RequestHandler):
         self.response.out.write(json.dumps(obj, default=date_handler))
 # [END guestbook]
 
+class DelAll(webapp2.RequestHandler):
+    def post(self):
+        entries = Entry.all(keys_only=True)
+
+        bookmark = self.request.get('bookmark')
+        if bookmark:
+            cursor =
+                ndb.Cursor.from_websafe_string(bookmark)
+
+        query = Entry.query()
+        entries, next_cursor, more = query.fetch_page(
+            1000,
+            keys_only=True,
+            start_cursor=cursor)
+
+        ndb.delete_multi(entries)
+
+        bookmark = None
+        if more:
+            bookmark = next_cursor.to_websafe_string()
+
+        taskqueue.add(
+            url='/task',
+            params={'bookmark': bookmark})
+
 
 # [START app]
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/sign', Guestbook),
+    ('/del', DelAll),
     ('/data', PullData),
 ], debug=True)
 # [END app]

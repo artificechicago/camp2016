@@ -333,7 +333,7 @@ void loop()
 
 	//Keep track of which minute it is
 
-  if(millis() - lastSecond >= 60000)
+  if(millis() - lastSecond >= 15*60000)
 
 	{
 
@@ -341,7 +341,7 @@ void loop()
 
 
 
-    lastSecond += 60000;
+    lastSecond += 15*60000;
 	//Report all readings every second
 
 		printWeather();
@@ -354,7 +354,7 @@ void loop()
 
 
 
-  delay(100);
+  delay(10000);
 
 }
 
