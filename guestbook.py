@@ -163,14 +163,14 @@ class PullData(webapp2.RequestHandler):
 
 class DelAll(webapp2.RequestHandler):
     def post(self):
-        entries = Entry.all(keys_only=True)
+        entries = Greeting.all(keys_only=True)
 
         bookmark = self.request.get('bookmark')
         if bookmark:
             cursor =
                 ndb.Cursor.from_websafe_string(bookmark)
 
-        query = Entry.query()
+        query = Greeting.query()
         entries, next_cursor, more = query.fetch_page(
             1000,
             keys_only=True,
