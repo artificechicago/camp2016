@@ -17,7 +17,7 @@ format={
   gridThickness: 2,
   interval:10,
   intervalType: "minute",
-  valueFormatString: "hh:mm TT",
+  valueFormatString: "MMM DD hh:mm TT",
   labelAngle: -20
 };
 		var chart0 = new CanvasJS.Chart("chartContainer0",{
@@ -101,7 +101,7 @@ format={
         }, updateInterval)
 		};
 
-lt ="2016-07-04T12:00:00.000000"
+lt ="2016-07-07T12:00:00.000000"
 		// generates first set of dataPoints
     $.ajax({
          url:"/data?guestbook_name=datastore&ind=0&last_time="+lt,

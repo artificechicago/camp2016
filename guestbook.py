@@ -167,8 +167,7 @@ class DelAll(webapp2.RequestHandler):
 
         bookmark = self.request.get('bookmark')
         if bookmark:
-            cursor =
-                ndb.Cursor.from_websafe_string(bookmark)
+            cursor = ndb.Cursor.from_websafe_string(bookmark)
 
         query = Greeting.query()
         entries, next_cursor, more = query.fetch_page(
